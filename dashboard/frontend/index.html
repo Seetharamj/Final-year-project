@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-Driven Cloud-Based Disaster Recovery and Risk Management System - Real-time monitoring, prediction, and automated recovery">
+    <title>Disaster Recovery Command Center | AI-Driven Cloud DR System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>Disaster Recovery Command Center</h1>
+                    <p>AI-Driven Cloud-Based DR System</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="system-status">
+                    <span class="status-indicator status-operational"></span>
+                    <span class="status-text">All Systems Operational</span>
+                </div>
+                <button class="btn-icon" id="notificationBtn">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="btn-icon" id="settingsBtn">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 1v6m0 6v6M1 12h6m6 0h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Risk Overview Section -->
+        <section class="section risk-overview">
+            <h2 class="section-title">Disaster Risk Assessment</h2>
+            <div class="risk-grid">
+                <div class="risk-card risk-low">
+                    <div class="risk-card-header">
+                        <h3>Overall Risk Level</h3>
+                        <span class="risk-badge">LOW</span>
+                    </div>
+                    <div class="risk-score">
+                        <div class="score-circle">
+                            <svg class="score-ring" viewBox="0 0 100 100">
+                                <circle class="score-ring-bg" cx="50" cy="50" r="40"/>
+                                <circle class="score-ring-fill" cx="50" cy="50" r="40" style="--progress: 0.15"/>
+                            </svg>
+                            <div class="score-value">
+                                <span class="score-number">15</span>
+                                <span class="score-max">/100</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="risk-details">
+                        <div class="risk-detail-item">
+                            <span class="label">Hazard Probability</span>
+                            <span class="value">0.001%</span>
+                        </div>
+                        <div class="risk-detail-item">
+                            <span class="label">Vulnerability Score</span>
+                            <span class="value">Low</span>
+                        </div>
+                        <div class="risk-detail-item">
+                            <span class="label">Recovery Capacity</span>
+                            <span class="value">High</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="disaster-components">
+                    <h3>Disaster System Components (Shi et al., 2020)</h3>
+                    <div class="component-grid">
+                        <div class="component-card">
+                            <div class="component-icon hazard">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h4>Hazards</h4>
+                            <p class="component-value">3 Active</p>
+                            <div class="component-bar">
+                                <div class="component-bar-fill" style="width: 20%"></div>
+                            </div>
+                        </div>
+
+                        <div class="component-card">
+                            <div class="component-icon environment">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </div>
+                            <h4>Environment</h4>
+                            <p class="component-value">3 Regions</p>
+                            <div class="component-bar">
+                                <div class="component-bar-fill" style="width: 100%"></div>
+                            </div>
+                        </div>
+
+                        <div class="component-card">
+                            <div class="component-icon exposure">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <h4>Exposure</h4>
+                            <p class="component-value">1,247 Assets</p>
+                            <div class="component-bar">
+                                <div class="component-bar-fill" style="width: 65%"></div>
+                            </div>
+                        </div>
+
+                        <div class="component-card">
+                            <div class="component-icon vulnerability">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h4>Vulnerability</h4>
+                            <p class="component-value">Minimal</p>
+                            <div class="component-bar">
+                                <div class="component-bar-fill" style="width: 15%"></div>
+                            </div>
+                        </div>
+
+                        <div class="component-card">
+                            <div class="component-icon recovery">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M23 4v6h-6M1 20v-6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h4>Recovery</h4>
+                            <p class="component-value">Excellent</p>
+                            <div class="component-bar">
+                                <div class="component-bar-fill" style="width: 95%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Multi-Region Status -->
+        <section class="section region-status">
+            <h2 class="section-title">Multi-Region Infrastructure Status</h2>
+            <div class="region-grid">
+                <div class="region-card region-primary">
+                    <div class="region-header">
+                        <div class="region-info">
+                            <h3>US East 1</h3>
+                            <span class="region-role">Primary</span>
+                        </div>
+                        <div class="region-status-indicator status-active">
+                            <span class="pulse"></span>
+                            Active
+                        </div>
+                    </div>
+                    <div class="region-metrics">
+                        <div class="metric">
+                            <span class="metric-label">Uptime</span>
+                            <span class="metric-value">99.99%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Latency</span>
+                            <span class="metric-value">45ms</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Load</span>
+                            <span class="metric-value">67%</span>
+                        </div>
+                    </div>
+                    <div class="region-resources">
+                        <div class="resource-item">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <span>24 Instances</span>
+                        </div>
+                        <div class="resource-item">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <span>8 Databases</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="region-card region-secondary">
+                    <div class="region-header">
+                        <div class="region-info">
+                            <h3>US West 2</h3>
+                            <span class="region-role">Secondary</span>
+                        </div>
+                        <div class="region-status-indicator status-standby">
+                            <span class="pulse"></span>
+                            Standby
+                        </div>
+                    </div>
+                    <div class="region-metrics">
+                        <div class="metric">
+                            <span class="metric-label">Uptime</span>
+                            <span class="metric-value">99.98%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Latency</span>
+                            <span class="metric-value">52ms</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Load</span>
+                            <span class="metric-value">23%</span>
+                        </div>
+                    </div>
+                    <div class="region-resources">
+                        <div class="resource-item">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <span>12 Instances</span>
+                        </div>
+                        <div class="resource-item">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <span>4 Databases</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="region-card region-dr">
+                    <div class="region-header">
+                        <div class="region-info">
+                            <h3>EU West 1</h3>
+                            <span class="region-role">DR Site</span>
+                        </div>
+                        <div class="region-status-indicator status-cold">
+                            <span class="pulse"></span>
+                            Cold Standby
+                        </div>
+                    </div>
+                    <div class="region-metrics">
+                        <div class="metric">
+                            <span class="metric-label">Uptime</span>
+                            <span class="metric-value">100%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Latency</span>
+                            <span class="metric-value">98ms</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Load</span>
+                            <span class="metric-value">5%</span>
+                        </div>
+                    </div>
+                    <div class="region-resources">
+                        <div class="resource-item">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <span>4 Instances</span>
+                        </div>
+                        <div class="resource-item">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <span>2 Databases</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Insights -->
+        <section class="section ai-insights">
+            <h2 class="section-title">AI-Driven Insights & Predictions</h2>
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <div class="insight-icon anomaly">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <h3>Anomaly Detection</h3>
+                    </div>
+                    <div class="insight-content">
+                        <div class="insight-stat">
+                            <span class="stat-value">0</span>
+                            <span class="stat-label">Anomalies Detected (24h)</span>
+                        </div>
+                        <div class="insight-details">
+                            <p class="detail-item">
+                                <span class="detail-icon success">✓</span>
+                                All metrics within normal range
+                            </p>
+                            <p class="detail-item">
+                                <span class="detail-icon success">✓</span>
+                                Detection accuracy: 96.8%
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <div class="insight-icon prediction">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3>Degradation Prediction</h3>
+                    </div>
+                    <div class="insight-content">
+                        <div class="insight-stat">
+                            <span class="stat-value">0.2%</span>
+                            <span class="stat-label">Failure Probability (15min)</span>
+                        </div>
+                        <div class="insight-details">
+                            <p class="detail-item">
+                                <span class="detail-icon success">✓</span>
+                                No degradation predicted
+                            </p>
+                            <p class="detail-item">
+                                <span class="detail-icon success">✓</span>
+                                Prediction confidence: 94.2%
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-card">
+                    <div class="insight-header">
+                        <div class="insight-icon optimization">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <h3>RTO/RPO Optimization</h3>
+                    </div>
+                    <div class="insight-content">
+                        <div class="insight-stats-grid">
+                            <div class="stat-box">
+                                <span class="stat-label">Current RTO</span>
+                                <span class="stat-value-small">2.3min</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Target RTO</span>
+                                <span class="stat-value-small">5.0min</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Current RPO</span>
+                                <span class="stat-value-small">0.5min</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Target RPO</span>
+                                <span class="stat-value-small">1.0min</span>
+                            </div>
+                        </div>
+                        <div class="insight-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 92%"></div>
+                            </div>
+                            <span class="progress-label">92% within target</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recovery Status -->
+        <section class="section recovery-status">
+            <h2 class="section-title">Recovery & Governance Metrics</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>System Availability</h3>
+                    <p class="metric-value-large">99.99%</p>
+                    <p class="metric-change positive">+0.02% from last month</p>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Backup Success Rate</h3>
+                    <p class="metric-value-large">100%</p>
+                    <p class="metric-change positive">All backups successful</p>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Recovery Tests</h3>
+                    <p class="metric-value-large">24/24</p>
+                    <p class="metric-change positive">Passed this month</p>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>Compliance Score</h3>
+                    <p class="metric-value-large">98%</p>
+                    <p class="metric-change neutral">Meets all requirements</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="section recent-activity">
+            <h2 class="section-title">Recent Activity & Events</h2>
+            <div class="activity-list">
+                <div class="activity-item">
+                    <div class="activity-icon success">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="activity-content">
+                        <h4>Automated Backup Completed</h4>
+                        <p>Full system backup to all regions completed successfully</p>
+                        <span class="activity-time">2 minutes ago</span>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-icon info">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <line x1="12" y1="16" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="activity-content">
+                        <h4>Failover Test Scheduled</h4>
+                        <p>Automated failover test scheduled for US-WEST-2 region</p>
+                        <span class="activity-time">15 minutes ago</span>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-icon success">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M23 4v6h-6M1 20v-6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="activity-content">
+                        <h4>AI Model Retrained</h4>
+                        <p>Anomaly detection model updated with latest data - accuracy improved to 96.8%</p>
+                        <span class="activity-time">1 hour ago</span>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-icon success">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="activity-content">
+                        <h4>Cross-Region Replication Verified</h4>
+                        <p>Data consistency verified across all three regions</p>
+                        <span class="activity-time">3 hours ago</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
