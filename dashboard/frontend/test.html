@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Connection Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+
+        h1 {
+            color: #00d4ff;
+            border-bottom: 2px solid #00d4ff;
+            padding-bottom: 10px;
+        }
+
+        .test-section {
+            background: #16213e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #00d4ff;
+        }
+
+        button {
+            background: #00d4ff;
+            color: #1a1a2e;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #00b8d4;
+        }
+
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .success {
+            background: #1b5e20;
+            border: 1px solid #4caf50;
+        }
+
+        .error {
+            background: #b71c1c;
+            border: 1px solid #f44336;
+        }
+
+        .info {
+            background: #01579b;
+            border: 1px solid #03a9f4;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        .status.ok {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status.fail {
+            background: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Dashboard Connection Test</h1>
+    <p>Use this page to test if your backend API and frontend are working correctly.</p>
+
+    <div class="test-section">
+        <h2>Test 1: Backend API Health Check</h2>
+        <p>Tests if the backend server on port 5000 is running.</p>
+        <button onclick="testBackendHealth()">Test Backend Health</button>
+        <div id="health-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Get Latest Metrics</h2>
+        <p>Tests if the backend can provide dashboard metrics.</p>
+        <button onclick="testMetrics()">Get Metrics</button>
+        <div id="metrics-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Get Hazard Details</h2>
+        <p>Tests the hazards API endpoint.</p>
+        <button onclick="testHazards()">Get Hazards</button>
+        <div id="hazards-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Get Region Details</h2>
+        <p>Tests the region API endpoint.</p>
+        <button onclick="testRegion()">Get US East 1 Details</button>
+        <div id="region-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 5: WebSocket Connection</h2>
+        <p>Tests real-time WebSocket connection.</p>
+        <button onclick="testWebSocket()">Connect WebSocket</button>
+        <button onclick="disconnectWebSocket()">Disconnect</button>
+        <div id="ws-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Quick Links</h2>
+        <p>
+            <a href="http://localhost:8080" target="_blank" style="color: #00d4ff;">Dashboard UI</a> |
+            <a href="http://localhost:5000" target="_blank" style="color: #00d4ff;">Backend API</a> |
+            <a href="http://localhost:5000/docs" target="_blank" style="color: #00d4ff;">API Docs</a>
+        </p>
+    </div>
+
+    <script>
+        let ws = null;
+
+        async function testBackendHealth() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.innerHTML = '<div class="result info">Testing...</div>';
+
+            try {
+                const response = await fetch('http://localhost:5000/health');
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✓ Backend is running!</strong><br>
+                        Status: ${data.status}<br>
+                        Active Connections: ${data.activeConnections}<br>
+                        Timestamp: ${data.timestamp}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>✗ Backend is NOT running!</strong><br>
+                        Error: ${error.message}<br><br>
+                        <strong>Solution:</strong> Start the backend server:<br>
+                        <code>python dashboard\\backend\\api_server.py</code>
+                    </div>
+                `;
+            }
+        }
+
+        async function testMetrics() {
+            const resultDiv = document.getElementById('metrics-result');
+            resultDiv.innerHTML = '<div class="result info">Testing...</div>';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/dashboard/latest');
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✓ Metrics API working!</strong><br>
+                        Risk Score: ${data.payload.riskScore}<br>
+                        Regions: ${data.payload.regions.length}<br>
+                        Anomalies: ${data.payload.ai.anomalies}<br>
+                        <details>
+                            <summary>View Full Response</summary>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>✗ Metrics API failed!</strong><br>
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testHazards() {
+            const resultDiv = document.getElementById('hazards-result');
+            resultDiv.innerHTML = '<div class="result info">Testing...</div>';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/hazards');
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✓ Hazards API working!</strong><br>
+                        Total Hazards: ${data.total}<br>
+                        <ul>
+                            ${data.hazards.map(h => `<li>${h.type} - ${h.severity} (${h.region})</li>`).join('')}
+                        </ul>
+                        <details>
+                            <summary>View Full Response</summary>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>✗ Hazards API failed!</strong><br>
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testRegion() {
+            const resultDiv = document.getElementById('region-result');
+            resultDiv.innerHTML = '<div class="result info">Testing...</div>';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/region/us-east-1');
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✓ Region API working!</strong><br>
+                        Name: ${data.name}<br>
+                        Role: ${data.role}<br>
+                        Status: ${data.status}<br>
+                        EC2 Instances: ${data.infrastructure.ec2Instances}<br>
+                        Databases: ${data.infrastructure.databases}<br>
+                        <details>
+                            <summary>View Full Response</summary>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>✗ Region API failed!</strong><br>
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function testWebSocket() {
+            const resultDiv = document.getElementById('ws-result');
+            resultDiv.innerHTML = '<div class="result info">Connecting to WebSocket...</div>';
+
+            try {
+                ws = new WebSocket('ws://localhost:5000/ws');
+
+                ws.onopen = () => {
+                    resultDiv.innerHTML = '<div class="result success"><strong>✓ WebSocket connected!</strong><br>Waiting for messages...</div>';
+                };
+
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    const currentContent = resultDiv.innerHTML;
+                    resultDiv.innerHTML = currentContent + `
+                        <div class="result info" style="margin-top: 5px;">
+                            <strong>Message received:</strong> ${data.type}<br>
+                            <small>${new Date().toLocaleTimeString()}</small>
+                        </div>
+                    `;
+                };
+
+                ws.onerror = (error) => {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <strong>✗ WebSocket error!</strong><br>
+                            Make sure backend is running on port 5000
+                        </div>
+                    `;
+                };
+
+                ws.onclose = () => {
+                    resultDiv.innerHTML += '<div class="result info" style="margin-top: 5px;">WebSocket disconnected</div>';
+                };
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>✗ WebSocket connection failed!</strong><br>
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function disconnectWebSocket() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            setTimeout(testBackendHealth, 500);
+        });
+    </script>
+</body>
+
+</html>

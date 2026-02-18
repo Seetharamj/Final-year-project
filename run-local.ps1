@@ -12,7 +12,8 @@ if (-Not (Test-Path "venv")) {
     Write-Host "[1/5] Creating Python virtual environment..." -ForegroundColor Yellow
     python -m venv venv
     Write-Host "✓ Virtual environment created" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "[1/5] Virtual environment already exists" -ForegroundColor Green
 }
 
@@ -28,7 +29,8 @@ if (-Not $?) {
     Write-Host "Installing Python dependencies (this may take a few minutes)..." -ForegroundColor Yellow
     pip install -r requirements.txt
     Write-Host "✓ Dependencies installed" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "✓ Dependencies already installed" -ForegroundColor Green
 }
 

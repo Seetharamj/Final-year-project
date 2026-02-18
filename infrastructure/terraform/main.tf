@@ -337,7 +337,7 @@ resource "aws_s3_bucket" "secondary" {
 }
 
 resource "aws_s3_bucket_versioning" "secondary" {
-  provider = aws.secondary
+  provider = aws.secondary  
   bucket   = aws_s3_bucket.secondary.id
   
   versioning_configuration {

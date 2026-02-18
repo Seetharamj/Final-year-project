@@ -1,0 +1,21 @@
+[Unit]
+Description=AI-Driven Disaster Recovery System
+After=network.target
+
+[Service]
+Type=forking
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/project-1
+ExecStart=/home/ubuntu/project-1/start-ec2.sh
+ExecStop=/usr/bin/pkill -f python3
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Environment
+Environment="PATH=/home/ubuntu/project-1/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+[Install]
+WantedBy=multi-user.target
