@@ -85,9 +85,9 @@ class AnomalyDetector:
             features['day_of_week'] = pd.to_datetime(features['timestamp']).dt.dayofweek
             features.drop('timestamp', axis=1, inplace=True)
         
-        # Fill NaN values
-        features.fillna(method='bfill', inplace=True)
-        features.fillna(0, inplace=True)
+        # Fill NaN values (compatible with pandas 2.x+)
+        features = features.bfill()
+        features = features.fillna(0)
         
         return features
     
@@ -167,8 +167,11 @@ class AnomalyDetector:
         anomalies = []
         for idx, (pred, score) in enumerate(zip(predictions, scores)):
             if pred == -1:  # Anomaly detected
+                # Convert timestamp to string for JSON serialization
+                ts = current_metrics.iloc[idx].get('timestamp', datetime.now())
+                ts_str = ts.isoformat() if hasattr(ts, 'isoformat') else str(ts)
                 anomaly = {
-                    'timestamp': current_metrics.iloc[idx].get('timestamp', datetime.now().isoformat()),
+                    'timestamp': ts_str,
                     'anomaly_score': float(score),
                     'severity': self._calculate_severity(score),
                     'affected_metrics': self._identify_affected_metrics(features.iloc[idx], current_metrics.iloc[idx]),

@@ -101,7 +101,8 @@ class ServiceDegradationPredictor:
         for col in metrics.columns:
             if col not in ['timestamp', 'degraded', 'time_to_failure', 'severity']:
                 features[f'{col}_roc'] = metrics[col].diff()
-                features[f'{col}_roc_pct'] = metrics[col].pct_change()
+                # Use safe pct_change: replace inf/-inf caused by division by zero
+                features[f'{col}_roc_pct'] = metrics[col].pct_change().replace([np.inf, -np.inf], 0)
         
         # Time-based features
         if 'timestamp' in features.columns:
@@ -115,9 +116,15 @@ class ServiceDegradationPredictor:
             if col in features.columns:
                 features.drop(col, axis=1, inplace=True)
         
-        # Fill NaN values
-        features.fillna(method='bfill', inplace=True)
-        features.fillna(0, inplace=True)
+        # Fill NaN values (compatible with pandas 2.x+)
+        features = features.bfill()
+        features = features.fillna(0)
+        
+        # Replace any remaining infinity values (from rolling/trend calculations)
+        features = features.replace([np.inf, -np.inf], 0)
+        
+        # Clip extreme values to prevent overflow in scaler
+        features = features.clip(-1e9, 1e9)
         
         return features
     
@@ -227,8 +234,11 @@ class ServiceDegradationPredictor:
         # Prepare results
         predictions = []
         for idx in range(len(X)):
+            # Convert timestamp to string for JSON serialization
+            ts = current_metrics.iloc[idx].get('timestamp', datetime.now())
+            ts_str = ts.isoformat() if hasattr(ts, 'isoformat') else str(ts)
             prediction = {
-                'timestamp': current_metrics.iloc[idx].get('timestamp', datetime.now().isoformat()),
+                'timestamp': ts_str,
                 'time_to_failure_minutes': float(ttf_pred[idx]),
                 'degradation_probability': float(deg_prob[idx]),
                 'will_degrade': bool(deg_pred[idx]),

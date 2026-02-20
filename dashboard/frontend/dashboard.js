@@ -1,527 +1,260 @@
 /**
- * Disaster Recovery Dashboard - Interactive JavaScript
- * Real-time updates, WebSocket connections, and dynamic visualizations
+ * Disaster Recovery Dashboard — Real-Time Data Only
+ * All region data is fetched live from the backend API (port 5000).
+ * No hardcoded / simulated values are used for the region section.
  */
 
-class DisasterRecoveryDashboard {
-    constructor() {
-        this.ws = null;
-        this.updateInterval = null;
-        this.init();
-    }
+const API_BASE = `http://${window.location.hostname}:5000`;
+const POLL_MS = 30_000;   // refresh every 30 seconds
+const STATUS_MAP = {
+    active: { cls: 'status-active', label: 'Active' },
+    standby: { cls: 'status-standby', label: 'Standby' },
+    cold: { cls: 'status-cold', label: 'Cold Standby' },
+    degraded: { cls: 'status-standby', label: 'Degraded' },
+    critical: { cls: 'status-active', label: 'Critical' },
+};
 
-    init() {
-        console.log('Initializing Disaster Recovery Dashboard...');
-        this.setupWebSocket();
-        this.setupEventListeners();
-        this.startRealTimeUpdates();
-        this.animateOnLoad();
-    }
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function svgIcon(path) {
+    return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${path}</svg>`;
+}
+const ICON_INSTANCE = svgIcon('<rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/>');
+const ICON_DB = svgIcon('<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="2"/>');
 
-    setupWebSocket() {
-        // Connect to backend WebSocket for real-time updates
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsHost = window.location.hostname;
-        const wsUrl = `${wsProtocol}//${wsHost}:5000/ws`;
+function cpuColour(load) {
+    if (load < 60) return 'var(--color-success)';
+    if (load < 80) return 'var(--color-warning)';
+    return 'var(--color-error)';
+}
 
-        try {
-            this.ws = new WebSocket(wsUrl);
+function timeAgo(isoString) {
+    const diff = Math.floor((Date.now() - new Date(isoString + 'Z')) / 1000);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    return `${Math.floor(diff / 3600)}h ago`;
+}
 
-            this.ws.onopen = () => {
-                console.log('WebSocket connected to backend');
-                this.updateSystemStatus('operational');
-            };
+// ── Build one region card from real API data ──────────────────────────────────
+function buildRegionCard(r) {
+    const st = STATUS_MAP[r.status] || STATUS_MAP.standby;
+    const color = cpuColour(r.cpu_load);
 
-            this.ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                this.handleRealtimeUpdate(data);
-            };
+    return `
+    <div class="region-card" data-region-id="${r.region_id}">
+        <!-- top accent bar colour by load -->
+        <div style="position:absolute;top:0;left:0;width:100%;height:4px;
+                    background:linear-gradient(90deg,${color},var(--color-secondary));
+                    border-radius:var(--radius-xl) var(--radius-xl) 0 0;"></div>
 
-            this.ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                this.updateSystemStatus('degraded');
-            };
-
-            this.ws.onclose = () => {
-                console.log('WebSocket disconnected. Reconnecting...');
-                setTimeout(() => this.setupWebSocket(), 5000);
-            };
-        } catch (error) {
-            console.warn('WebSocket not available, using polling fallback');
-            this.startPolling();
-        }
-    }
-
-    handleRealtimeUpdate(data) {
-        switch (data.type) {
-            case 'metrics':
-                this.updateMetrics(data.payload);
-                break;
-            case 'anomaly':
-                this.handleAnomaly(data.payload);
-                break;
-            case 'prediction':
-                this.updatePredictions(data.payload);
-                break;
-            case 'region_status':
-                this.updateRegionStatus(data.payload);
-                break;
-            case 'activity':
-                this.addActivity(data.payload);
-                break;
-            default:
-                console.log('Unknown update type:', data.type);
-        }
-    }
-
-    startPolling() {
-        // Fallback polling if WebSocket is not available
-        this.updateInterval = setInterval(() => {
-            this.fetchLatestData();
-        }, 5000); // Poll every 5 seconds
-    }
-
-    async fetchLatestData() {
-        try {
-            const apiUrl = `http://${window.location.hostname}:5000/api/dashboard/latest`;
-            const response = await fetch(apiUrl);
-            const data = await response.json();
-            this.handleRealtimeUpdate(data);
-        } catch (error) {
-            console.error('Error fetching latest data:', error);
-        }
-    }
-
-    updateMetrics(metrics) {
-        // Update various metrics on the dashboard
-        if (metrics.riskScore !== undefined) {
-            this.updateRiskScore(metrics.riskScore);
-        }
-
-        if (metrics.regions) {
-            metrics.regions.forEach(region => {
-                this.updateRegionMetrics(region);
-            });
-        }
-
-        if (metrics.ai) {
-            this.updateAIInsights(metrics.ai);
-        }
-    }
-
-    updateRiskScore(score) {
-        const scoreElement = document.querySelector('.score-number');
-        const ringElement = document.querySelector('.score-ring-fill');
-        const badgeElement = document.querySelector('.risk-badge');
-
-        if (scoreElement) {
-            this.animateNumber(scoreElement, parseInt(scoreElement.textContent), score);
-        }
-
-        if (ringElement) {
-            ringElement.style.setProperty('--progress', score / 100);
-        }
-
-        if (badgeElement) {
-            const level = this.getRiskLevel(score);
-            badgeElement.textContent = level;
-            badgeElement.className = `risk-badge risk-${level.toLowerCase()}`;
-        }
-    }
-
-    getRiskLevel(score) {
-        if (score < 20) return 'LOW';
-        if (score < 40) return 'MODERATE';
-        if (score < 70) return 'HIGH';
-        return 'EXTREME';
-    }
-
-    updateRegionMetrics(region) {
-        const regionCard = document.querySelector(`[data-region="${region.id}"]`);
-        if (!regionCard) return;
-
-        // Update metrics
-        const metrics = {
-            uptime: region.uptime,
-            latency: region.latency,
-            load: region.load
-        };
-
-        Object.entries(metrics).forEach(([key, value]) => {
-            const element = regionCard.querySelector(`[data-metric="${key}"]`);
-            if (element) {
-                element.textContent = this.formatMetricValue(key, value);
-            }
-        });
-
-        // Update status
-        const statusElement = regionCard.querySelector('.region-status-indicator');
-        if (statusElement && region.status) {
-            statusElement.className = `region-status-indicator status-${region.status}`;
-            statusElement.querySelector('span:last-child').textContent =
-                region.status.charAt(0).toUpperCase() + region.status.slice(1);
-        }
-    }
-
-    formatMetricValue(metric, value) {
-        switch (metric) {
-            case 'uptime':
-                return `${value.toFixed(2)}%`;
-            case 'latency':
-                return `${value}ms`;
-            case 'load':
-                return `${value}%`;
-            default:
-                return value;
-        }
-    }
-
-    updateAIInsights(ai) {
-        // Update anomaly detection
-        if (ai.anomalies !== undefined) {
-            const anomalyElement = document.querySelector('.insight-card .stat-value');
-            if (anomalyElement) {
-                this.animateNumber(anomalyElement,
-                    parseInt(anomalyElement.textContent),
-                    ai.anomalies);
-            }
-        }
-
-        // Update degradation prediction
-        if (ai.degradationProbability !== undefined) {
-            const predElement = document.querySelector('.insight-card:nth-child(2) .stat-value');
-            if (predElement) {
-                predElement.textContent = `${(ai.degradationProbability * 100).toFixed(1)}%`;
-            }
-        }
-
-        // Update RTO/RPO
-        if (ai.rto || ai.rpo) {
-            this.updateRTORPO(ai.rto, ai.rpo);
-        }
-    }
-
-    updateRTORPO(rto, rpo) {
-        if (rto) {
-            const rtoElement = document.querySelector('[data-metric="current-rto"]');
-            if (rtoElement) {
-                rtoElement.textContent = `${rto.toFixed(1)}min`;
-            }
-        }
-
-        if (rpo) {
-            const rpoElement = document.querySelector('[data-metric="current-rpo"]');
-            if (rpoElement) {
-                rpoElement.textContent = `${rpo.toFixed(1)}min`;
-            }
-        }
-    }
-
-    handleAnomaly(anomaly) {
-        // Show notification
-        this.showNotification({
-            type: 'warning',
-            title: 'Anomaly Detected',
-            message: `${anomaly.severity} anomaly in ${anomaly.affected_metrics.join(', ')}`,
-            timestamp: anomaly.timestamp
-        });
-
-        // Update notification badge
-        this.incrementNotificationBadge();
-
-        // Add to activity feed
-        this.addActivity({
-            type: 'anomaly',
-            title: 'Anomaly Detected',
-            description: `${anomaly.severity} severity - ${anomaly.affected_metrics.join(', ')}`,
-            timestamp: anomaly.timestamp,
-            icon: 'warning'
-        });
-    }
-
-    addActivity(activity) {
-        const activityList = document.querySelector('.activity-list');
-        if (!activityList) return;
-
-        const activityItem = document.createElement('div');
-        activityItem.className = 'activity-item';
-        activityItem.style.animation = 'fadeIn 0.5s ease-out';
-
-        const iconClass = this.getActivityIconClass(activity.icon || activity.type);
-
-        activityItem.innerHTML = `
-            <div class="activity-icon ${iconClass}">
-                ${this.getActivityIcon(activity.icon || activity.type)}
+        <div class="region-header">
+            <div class="region-info">
+                <h3>${r.region_name}</h3>
+                <span class="region-role">${r.role}</span>
             </div>
-            <div class="activity-content">
-                <h4>${activity.title}</h4>
-                <p>${activity.description}</p>
-                <span class="activity-time">${this.formatTimestamp(activity.timestamp)}</span>
+            <div class="region-status-indicator ${st.cls}">
+                <span class="pulse"></span>
+                ${st.label}
             </div>
-        `;
+        </div>
 
-        // Insert at the beginning
-        activityList.insertBefore(activityItem, activityList.firstChild);
+        <div class="region-metrics">
+            <div class="metric">
+                <span class="metric-label">Uptime</span>
+                <span class="metric-value" style="color:var(--color-success)">
+                    ${r.uptime.toFixed(2)}%
+                </span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Latency</span>
+                <span class="metric-value">${r.latency_ms.toFixed(0)}ms</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">CPU Load</span>
+                <span class="metric-value" style="color:${color}">
+                    ${r.cpu_load.toFixed(1)}%
+                </span>
+            </div>
+        </div>
 
-        // Keep only last 10 activities
-        while (activityList.children.length > 10) {
-            activityList.removeChild(activityList.lastChild);
-        }
-    }
+        <!-- CPU load bar -->
+        <div style="margin:0.5rem 0 1rem;">
+            <div style="width:100%;height:6px;background:rgba(255,255,255,0.1);
+                        border-radius:3px;overflow:hidden;">
+                <div style="width:${Math.min(r.cpu_load, 100)}%;height:100%;
+                            background:${color};border-radius:3px;
+                            transition:width 1s ease;"></div>
+            </div>
+        </div>
 
-    getActivityIconClass(type) {
-        const iconMap = {
-            success: 'success',
-            warning: 'warning',
-            error: 'error',
-            info: 'info',
-            anomaly: 'warning'
-        };
-        return iconMap[type] || 'info';
-    }
+        <div class="region-resources">
+            <div class="resource-item">
+                ${ICON_INSTANCE}
+                <span>${r.instance_count} Instance${r.instance_count !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="resource-item">
+                ${ICON_DB}
+                <span>${r.db_count} Database${r.db_count !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="resource-item" style="margin-left:auto;opacity:0.6;font-size:0.7rem;">
+                📡 ${timeAgo(r.timestamp)}
+            </div>
+        </div>
 
-    getActivityIcon(type) {
-        const icons = {
-            success: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-            warning: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="2"/></svg>',
-            info: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="16" x2="12" y2="12" stroke="currentColor" stroke-width="2"/></svg>'
-        };
-        return icons[type] || icons.info;
-    }
+        <!-- Extra real metrics row -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);
+                    gap:0.5rem;margin-top:1rem;padding-top:1rem;
+                    border-top:1px solid var(--color-border);">
+            <div style="text-align:center;">
+                <div style="font-size:0.65rem;color:var(--color-text-tertiary);
+                            text-transform:uppercase;letter-spacing:.05em;">Error Rate</div>
+                <div style="font-size:1rem;font-weight:700;
+                            color:${r.error_rate > 2 ? 'var(--color-error)' : 'var(--color-success)'}">
+                    ${r.error_rate.toFixed(2)}%
+                </div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:0.65rem;color:var(--color-text-tertiary);
+                            text-transform:uppercase;letter-spacing:.05em;">Net In</div>
+                <div style="font-size:1rem;font-weight:700;color:var(--color-primary-light)">
+                    ${r.network_in.toFixed(0)} MB/s
+                </div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:0.65rem;color:var(--color-text-tertiary);
+                            text-transform:uppercase;letter-spacing:.05em;">Net Out</div>
+                <div style="font-size:1rem;font-weight:700;color:var(--color-accent)">
+                    ${r.network_out.toFixed(0)} MB/s
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
 
-    formatTimestamp(timestamp) {
-        const date = new Date(timestamp);
-        const now = new Date();
-        const diff = Math.floor((now - date) / 1000); // seconds
+// ── Error card when API is unreachable ────────────────────────────────────────
+function buildErrorCard(msg) {
+    return `
+    <div class="region-card" style="grid-column:1/-1;text-align:center;padding:3rem;
+                                     border-color:var(--color-error);">
+        <div style="font-size:2rem;margin-bottom:1rem;">⚠️</div>
+        <p style="color:var(--color-error);font-size:1rem;font-weight:600;">
+            Cannot reach API server
+        </p>
+        <p style="color:var(--color-text-tertiary);font-size:0.8rem;margin-top:0.5rem;">
+            ${msg}
+        </p>
+        <p style="color:var(--color-text-tertiary);font-size:0.75rem;margin-top:1rem;">
+            Make sure <code>python3 backend/api_server.py</code> is running on port 5000
+        </p>
+    </div>`;
+}
 
-        if (diff < 60) return `${diff} seconds ago`;
-        if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
-        if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
-        return date.toLocaleDateString();
-    }
+// ── Fetch & render region cards ───────────────────────────────────────────────
+async function refreshRegions() {
+    const grid = document.getElementById('region-grid');
+    const lastUpd = document.getElementById('region-last-updated');
+    if (!grid) return;
 
-    showNotification(notification) {
-        // Create notification element
-        const notif = document.createElement('div');
-        notif.className = `notification notification-${notification.type}`;
-        notif.style.cssText = `
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            background: var(--color-bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-lg);
-            box-shadow: var(--shadow-xl);
-            max-width: 400px;
-            z-index: 1000;
-            animation: slideInRight 0.3s ease-out;
-        `;
+    try {
+        const res = await fetch(`${API_BASE}/api/regions`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        const regions = json.regions;
 
-        notif.innerHTML = `
-            <h4 style="margin-bottom: 0.5rem; font-weight: 600;">${notification.title}</h4>
-            <p style="color: var(--color-text-secondary); font-size: 0.875rem;">${notification.message}</p>
-        `;
-
-        document.body.appendChild(notif);
-
-        // Auto-remove after 5 seconds
-        setTimeout(() => {
-            notif.style.animation = 'slideOutRight 0.3s ease-out';
-            setTimeout(() => notif.remove(), 300);
-        }, 5000);
-    }
-
-    incrementNotificationBadge() {
-        const badge = document.querySelector('.notification-badge');
-        if (badge) {
-            const current = parseInt(badge.textContent) || 0;
-            badge.textContent = current + 1;
-        }
-    }
-
-    animateNumber(element, start, end, duration = 1000) {
-        const range = end - start;
-        const increment = range / (duration / 16); // 60fps
-        let current = start;
-
-        const timer = setInterval(() => {
-            current += increment;
-            if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
-                current = end;
-                clearInterval(timer);
-            }
-            element.textContent = Math.round(current);
-        }, 16);
-    }
-
-    setupEventListeners() {
-        // Notification button
-        const notifBtn = document.getElementById('notificationBtn');
-        if (notifBtn) {
-            notifBtn.addEventListener('click', () => {
-                this.showNotificationPanel();
-            });
-        }
-
-        // Settings button
-        const settingsBtn = document.getElementById('settingsBtn');
-        if (settingsBtn) {
-            settingsBtn.addEventListener('click', () => {
-                this.showSettingsPanel();
-            });
+        if (!regions || regions.length === 0) {
+            grid.innerHTML = buildErrorCard('API returned no region data yet — retrying…');
+            return;
         }
 
-        // Add hover effects to cards
-        this.addCardInteractions();
-    }
+        // Build cards from real data only
+        grid.innerHTML = regions.map(buildRegionCard).join('');
 
-    addCardInteractions() {
-        const cards = document.querySelectorAll('.risk-card, .region-card, .insight-card, .metric-card');
+        // Update timestamp
+        const now = new Date().toLocaleTimeString();
+        if (lastUpd) lastUpd.textContent = `Last updated: ${now}`;
 
-        cards.forEach(card => {
-            card.addEventListener('mouseenter', (e) => {
-                card.style.transform = 'translateY(-4px)';
-            });
+        // Update system status header
+        const allActive = regions.every(r => r.status === 'active');
+        const anyDown = regions.some(r => r.status === 'critical');
+        updateSystemStatus(anyDown ? 'outage' : allActive ? 'operational' : 'degraded');
 
-            card.addEventListener('mouseleave', (e) => {
-                card.style.transform = 'translateY(0)';
-            });
-        });
-    }
-
-    showNotificationPanel() {
-        console.log('Show notifications panel');
-        // Implementation for notification panel
-    }
-
-    showSettingsPanel() {
-        console.log('Show settings panel');
-        // Implementation for settings panel
-    }
-
-    startRealTimeUpdates() {
-        // Simulate real-time updates for demo purposes
-        setInterval(() => {
-            this.simulateMetricUpdate();
-        }, 3000);
-    }
-
-    simulateMetricUpdate() {
-        // Simulate random metric fluctuations
-        const regions = ['us-east-1', 'us-west-2', 'eu-west-1'];
-        const randomRegion = regions[Math.floor(Math.random() * regions.length)];
-
-        const mockData = {
-            type: 'metrics',
-            payload: {
-                regions: [{
-                    id: randomRegion,
-                    uptime: 99.98 + Math.random() * 0.02,
-                    latency: 40 + Math.random() * 20,
-                    load: 50 + Math.random() * 30
-                }]
-            }
-        };
-
-        // Uncomment to see live updates
-        // this.handleRealtimeUpdate(mockData);
-    }
-
-    animateOnLoad() {
-        // Animate elements on page load
-        const sections = document.querySelectorAll('.section');
-        sections.forEach((section, index) => {
-            section.style.opacity = '0';
-            section.style.transform = 'translateY(20px)';
-
-            setTimeout(() => {
-                section.style.transition = 'all 0.6s ease-out';
-                section.style.opacity = '1';
-                section.style.transform = 'translateY(0)';
-            }, index * 100);
-        });
-
-        // Animate progress bars
-        setTimeout(() => {
-            this.animateProgressBars();
-        }, 500);
-    }
-
-    animateProgressBars() {
-        const bars = document.querySelectorAll('.component-bar-fill, .progress-fill');
-        bars.forEach(bar => {
-            const width = bar.style.width;
-            bar.style.width = '0';
-            setTimeout(() => {
-                bar.style.width = width;
-            }, 100);
-        });
-    }
-
-    updateSystemStatus(status) {
-        const statusElement = document.querySelector('.system-status');
-        const statusText = document.querySelector('.status-text');
-        const statusIndicator = document.querySelector('.status-indicator');
-
-        if (!statusElement) return;
-
-        const statusConfig = {
-            operational: {
-                text: 'All Systems Operational',
-                class: 'status-operational',
-                color: 'var(--color-success)'
-            },
-            degraded: {
-                text: 'System Degraded',
-                class: 'status-degraded',
-                color: 'var(--color-warning)'
-            },
-            outage: {
-                text: 'System Outage',
-                class: 'status-outage',
-                color: 'var(--color-error)'
-            }
-        };
-
-        const config = statusConfig[status] || statusConfig.operational;
-
-        if (statusText) statusText.textContent = config.text;
-        if (statusIndicator) {
-            statusIndicator.className = `status-indicator ${config.class}`;
-        }
+    } catch (err) {
+        console.error('Region fetch error:', err);
+        grid.innerHTML = buildErrorCard(err.message);
+        if (lastUpd) lastUpd.textContent = `Failed at ${new Date().toLocaleTimeString()}`;
+        updateSystemStatus('degraded');
     }
 }
 
-// Initialize dashboard when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    window.dashboard = new DisasterRecoveryDashboard();
-});
+// ── System status header ──────────────────────────────────────────────────────
+function updateSystemStatus(status) {
+    const el = document.querySelector('.system-status');
+    const txt = document.querySelector('.status-text');
+    const dot = document.querySelector('.status-indicator');
+    if (!el) return;
+    const cfg = {
+        operational: { text: 'All Systems Operational', cls: 'status-operational', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.3)' },
+        degraded: { text: 'System Degraded', cls: 'status-degraded', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)' },
+        outage: { text: 'System Outage', cls: 'status-outage', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.3)' },
+    }[status] || cfg.operational;
+    if (txt) txt.textContent = cfg.text;
+    if (dot) dot.className = `status-indicator ${cfg.cls}`;
+    el.style.background = cfg.bg;
+    el.style.borderColor = cfg.border;
+}
 
-// Add CSS animations
+// ── Notification badge ────────────────────────────────────────────────────────
+function setupButtons() {
+    document.getElementById('notificationBtn')?.addEventListener('click', () => {
+        alert('No new alerts at this time.');
+    });
+    document.getElementById('settingsBtn')?.addEventListener('click', () => {
+        alert('Settings panel coming soon.');
+    });
+}
+
+// ── Animate sections on load ──────────────────────────────────────────────────
+function animateSections() {
+    document.querySelectorAll('.section').forEach((s, i) => {
+        s.style.opacity = '0';
+        s.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            s.style.transition = 'all 0.6s ease-out';
+            s.style.opacity = '1';
+            s.style.transform = 'translateY(0)';
+        }, i * 100);
+    });
+    // Animate progress bars
+    setTimeout(() => {
+        document.querySelectorAll('.component-bar-fill, .progress-fill').forEach(bar => {
+            const w = bar.style.width;
+            bar.style.width = '0';
+            setTimeout(() => { bar.style.width = w; }, 100);
+        });
+    }, 500);
+}
+
+// ── Inject CSS animations ─────────────────────────────────────────────────────
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideInRight {
-        from {
-            transform: translateX(400px);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+        from { transform: translateX(400px); opacity: 0; }
+        to   { transform: translateX(0);     opacity: 1; }
     }
-    
     @keyframes slideOutRight {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(400px);
-            opacity: 0;
-        }
+        from { transform: translateX(0);     opacity: 1; }
+        to   { transform: translateX(400px); opacity: 0; }
     }
 `;
 document.head.appendChild(style);
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    animateSections();
+    setupButtons();
+
+    // First fetch immediately, then poll
+    refreshRegions();
+    setInterval(refreshRegions, POLL_MS);
+
+    console.log(`Dashboard started — polling API every ${POLL_MS / 1000}s`);
+});
